@@ -1,23 +1,23 @@
 services:
   postgres:
     image: postgres:17
-    container_name: the_happy_pupbox_postgres
+    container_name: nest_postgres
     restart: no
     environment:
-      POSTGRES_USER: the_happy_pupbox
-      POSTGRES_PASSWORD: the_happy_pupbox
-      POSTGRES_DB: the_happy_pupbox
+      POSTGRES_USER: nest_js
+      POSTGRES_PASSWORD: nest_js
+      POSTGRES_DB: nest_js
     ports:
       - '6090:5432'
     volumes:
-      - the_happy_pupbox_postgres:/var/lib/postgresql/data
+      - nest_postgres:/var/lib/postgresql/data
     networks:
-      - the_happy_pupbox_network
+      - nest_network
 
 networks:
-  the_happy_pupbox_network:
+  nest_network:
     driver: bridge
 
 volumes:
-  the_happy_pupbox_postgres:
+  nest_postgres:
     driver: local
