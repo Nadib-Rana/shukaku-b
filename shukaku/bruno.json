@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "shukaku-APIS",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
