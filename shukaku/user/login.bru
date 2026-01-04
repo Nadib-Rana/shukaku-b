@@ -1,0 +1,22 @@
+meta {
+  name: login
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/users/auth
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "anonymousId": "device_hash_unique_12345"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

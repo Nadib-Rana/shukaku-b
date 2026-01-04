@@ -6,10 +6,11 @@
  */
 import { Global, Module } from '@nestjs/common';
 import { ContextService } from './context.service';
+import { PrismaService } from './prisma.service';
 
 @Global() // Make ContextService available globally
 @Module({
-  providers: [ContextService],
-  exports: [ContextService],
+  providers: [ContextService, PrismaService],
+  exports: [ContextService, PrismaService],
 })
 export class ContextModule {}

@@ -1,0 +1,28 @@
+meta {
+  name: create-post-voice
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:3000/posts
+  body: json
+  auth: inherit
+}
+
+headers {
+  user-id: 4a193f93-4bff-4ef7-9794-2acf739c5e80
+}
+
+body:json {
+  {
+    "categoryId": "27a7d061-dcdc-41c7-ac57-b821ca3a8a41",
+    "contentType": "VOICE",
+    "voiceUrl": "https://your-storage.com/audio/voice-123.mp3"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

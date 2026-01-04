@@ -7,6 +7,7 @@
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
+  moduleFormat    = "cjs"
 }
 
 datasource db {
@@ -14,15 +15,14 @@ datasource db {
 }
 
 
+enum ContentType {
+  TEXT
+  VOICE
+}
+
 model User {
   id             String        @id @default(uuid()) @db.Uuid
-  anonymousId    String        @unique @map("anonymous_id")
-  deviceHash     String        @unique @map("device_hash")
-  platform       String        // "ios" | "android"
-  
-  email          String?       @unique
-  passwordHash   String?       @map("password_hash")
-  isSecured      Boolean       @default(false) @map("is_secured")
+  anonymousId    String        @unique @map("anonymous_id") // The device hash
   
   subscriptionId String?       @db.Uuid @map("subscription_id")
   subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
@@ -38,43 +38,42 @@ model User {
   @@map("users")
 }
 
-
 model Post {
-  id           String     @id @default(uuid()) @db.Uuid
-  userId       String     @db.Uuid @map("user_id")
-  user         User       @relation(fields: [userId], references: [id])
+  id           String      @id @default(uuid()) @db.Uuid
+  userId       String      @db.Uuid @map("user_id")
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  categoryId   String     @db.Uuid @map("category_id")
-  category     Category   @relation(fields: [categoryId], references: [id])
+  categoryId   String      @db.Uuid @map("category_id")
+  category     Category    @relation(fields: [categoryId], references: [id])
   
-  contentType  String     @map("content_type") // "text" | "voice"
-  textContent  String?    @map("text_content") @db.Text
-  voiceUrl     String?    @map("voice_url") @db.Text
+  contentType  ContentType @map("content_type") 
+  textContent  String?     @map("text_content") @db.Text
+  voiceUrl     String?     @map("voice_url") @db.Text
   
-  expiresAt    DateTime   @map("expires_at")
-  isDeleted    Boolean    @default(false) @map("is_deleted")
-  createdAt    DateTime   @default(now()) @map("created_at")
+  expiresAt    DateTime    @map("expires_at")
+  isDeleted    Boolean     @default(false) @map("is_deleted")
+  createdAt    DateTime    @default(now()) @map("created_at")
   
   responses    Response[]
 
   @@map("posts")
+  @@index([expiresAt])
 }
 
-
 model Response {
-  id           String   @id @default(uuid()) @db.Uuid
-  postId       String   @db.Uuid @map("post_id")
-  post         Post     @relation(fields: [postId], references: [id])
+  id           String      @id @default(uuid()) @db.Uuid
+  postId       String      @db.Uuid @map("post_id")
+  post         Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
   
-  userId       String   @db.Uuid @map("user_id")
-  user         User     @relation(fields: [userId], references: [id])
+  userId       String      @db.Uuid @map("user_id")
+  user         User        @relation(fields: [userId], references: [id])
   
-  contentType  String   @map("content_type") // "text" | "voice"
-  textContent  String?  @map("text_content") @db.Text
-  voiceUrl     String?  @map("voice_url") @db.Text
+  contentType  ContentType @map("content_type")
+  textContent  String?     @map("text_content") @db.Text
+  voiceUrl     String?     @map("voice_url") @db.Text
   
-  isHidden     Boolean  @default(false) @map("is_hidden")
-  createdAt    DateTime @default(now()) @map("created_at")
+  isHidden     Boolean     @default(false) @map("is_hidden")
+  createdAt    DateTime    @default(now()) @map("created_at")
 
   @@map("responses")
 }
@@ -89,10 +88,9 @@ model Category {
   @@map("categories")
 }
 
-
 model Subscription {
   id                String   @id @default(uuid()) @db.Uuid
-  name              String   // "basic" | "premium"
+  name              String   
   postExpiryHours   Int      @map("post_expiry_hours")
   themeColor        String?  @map("theme_color")
   canHideResponse   Boolean  @default(false) @map("can_hide_response")
@@ -105,7 +103,6 @@ model Subscription {
   @@map("subscriptions")
 }
 
-
 model Purchase {
   id             String       @id @default(uuid()) @db.Uuid
   userId         String       @db.Uuid @map("user_id")
@@ -114,20 +111,19 @@ model Purchase {
   subscriptionId String       @db.Uuid @map("subscription_id")
   subscription   Subscription @relation(fields: [subscriptionId], references: [id])
   
-  platform       String
+  platform       String       // "ios" | "android" - needed for receipt validation
   transactionId  String       @map("transaction_id")
   purchaseDate   DateTime     @map("purchase_date")
   expiryDate     DateTime?    @map("expiry_date")
-  status         String       // "active" | "expired" | "canceled"
+  status         String       
 
   @@map("purchases")
 }
 
-
 model PushToken {
   id          String   @id @default(uuid()) @db.Uuid
   userId      String   @db.Uuid @map("user_id")
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   deviceToken String   @map("device_token")
   platform    String

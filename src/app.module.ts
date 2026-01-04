@@ -8,9 +8,27 @@ import { ContextModule } from './common/context/context.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { APP_INTERCEPTOR, Reflector } from '@nestjs/core'; // <-- Import Reflector
 import { ResponseStandardizationInterceptor } from './common/interceptors/response-standardization.interceptor';
+import { UserModule } from './user/user.module';
+import { PrismaModule } from './prisma.module';
+import { PostModule } from './post/post.module';
+import { ResponseModule } from './response/response.module';
+import { CategoryModule } from './category/category.module';
+import { SubscriptionModule } from './subscription/subscription.module';
+import { PurchaseModule } from './purchase/purchase.module';
+import { PushTokenModule } from './push-token/push-token.module';
 
 @Module({
-  imports: [ContextModule],
+  imports: [
+    ContextModule,
+    UserModule,
+    PrismaModule,
+    PostModule,
+    ResponseModule,
+    CategoryModule,
+    SubscriptionModule,
+    PurchaseModule,
+    PushTokenModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,

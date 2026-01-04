@@ -1,12 +1,10 @@
+-- CreateEnum
+CREATE TYPE "ContentType" AS ENUM ('TEXT', 'VOICE');
+
 -- CreateTable
 CREATE TABLE "users" (
     "id" UUID NOT NULL,
     "anonymous_id" TEXT NOT NULL,
-    "device_hash" TEXT NOT NULL,
-    "platform" TEXT NOT NULL,
-    "email" TEXT,
-    "password_hash" TEXT,
-    "is_secured" BOOLEAN NOT NULL DEFAULT false,
     "subscription_id" UUID,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "last_active_at" TIMESTAMP(3),
@@ -19,7 +17,7 @@ CREATE TABLE "posts" (
     "id" UUID NOT NULL,
     "user_id" UUID NOT NULL,
     "category_id" UUID NOT NULL,
-    "content_type" TEXT NOT NULL,
+    "content_type" "ContentType" NOT NULL,
     "text_content" TEXT,
     "voice_url" TEXT,
     "expires_at" TIMESTAMP(3) NOT NULL,
@@ -34,7 +32,7 @@ CREATE TABLE "responses" (
     "id" UUID NOT NULL,
     "post_id" UUID NOT NULL,
     "user_id" UUID NOT NULL,
-    "content_type" TEXT NOT NULL,
+    "content_type" "ContentType" NOT NULL,
     "text_content" TEXT,
     "voice_url" TEXT,
     "is_hidden" BOOLEAN NOT NULL DEFAULT false,
@@ -95,10 +93,7 @@ CREATE TABLE "push_tokens" (
 CREATE UNIQUE INDEX "users_anonymous_id_key" ON "users"("anonymous_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "users_device_hash_key" ON "users"("device_hash");
-
--- CreateIndex
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+CREATE INDEX "posts_expires_at_idx" ON "posts"("expires_at");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "categories_name_key" ON "categories"("name");
@@ -107,13 +102,13 @@ CREATE UNIQUE INDEX "categories_name_key" ON "categories"("name");
 ALTER TABLE "users" ADD CONSTRAINT "users_subscription_id_fkey" FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "posts" ADD CONSTRAINT "posts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "posts" ADD CONSTRAINT "posts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "posts" ADD CONSTRAINT "posts_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "responses" ADD CONSTRAINT "responses_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "posts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "responses" ADD CONSTRAINT "responses_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "responses" ADD CONSTRAINT "responses_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -125,4 +120,4 @@ ALTER TABLE "purchases" ADD CONSTRAINT "purchases_user_id_fkey" FOREIGN KEY ("us
 ALTER TABLE "purchases" ADD CONSTRAINT "purchases_subscription_id_fkey" FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "push_tokens" ADD CONSTRAINT "push_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "push_tokens" ADD CONSTRAINT "push_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
