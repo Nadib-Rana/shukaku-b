@@ -22,7 +22,7 @@ export class ResponseService {
       throw new NotFoundException('Post not found');
     }
 
-    // ৩. Unsafe assignment সমাধান: সরাসরি ভ্যালু ব্যবহার না করে টাইপ নিশ্চিত করুন
+    // ৩. সরাসরি ভ্যালু ব্যবহার না করে টাইপ নিশ্চিত করুন
     const finalIsHidden: boolean = post.isResponseDefaultHidden === true;
 
     return this.prisma.response.create({

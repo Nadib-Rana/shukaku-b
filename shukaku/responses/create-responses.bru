@@ -1,0 +1,28 @@
+meta {
+  name: create-responses
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:3000/responses
+  body: json
+  auth: inherit
+}
+
+headers {
+  user-id: 38338669-d28f-4024-b128-05056ed3bf49
+}
+
+body:json {
+  {
+    "postId": "2192d3a0-e61d-4e0b-97d8-68ad179d6f6c",
+    "contentType": "VOICE",
+    "voiceUrl": "https://storage.your-app.com/v1/audios/sample_voice_rec.mp3"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
