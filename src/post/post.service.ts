@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 
@@ -7,7 +11,6 @@ export class PostService {
   constructor(private prisma: PrismaService) {}
 
   async create(userId: string, dto: CreatePostDto) {
-    // ইউজারের সাবস্ক্রিপশন ডাটা চেক করা
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { subscription: true },
@@ -15,10 +18,10 @@ export class PostService {
 
     if (!user) throw new NotFoundException('User not found');
 
-    // লজিক: সাবস্ক্রিপশন থাকলে postExpiryHours (যেমন ৪৮), না থাকলে ডিফল্ট ২৪ ঘণ্টা
+    const canHide = user.subscription?.canHideResponse || false;
+    const hidePref = canHide ? (dto.isResponseDefaultHidden ?? false) : false;
+
     const expiryHours = user.subscription?.postExpiryHours || 24;
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + expiryHours);
 
     return this.prisma.post.create({
       data: {
@@ -27,33 +30,55 @@ export class PostService {
         contentType: dto.contentType,
         textContent: dto.textContent,
         voiceUrl: dto.voiceUrl,
-        expiresAt,
+        isResponseDefaultHidden: hidePref,
+        expiresAt: new Date(Date.now() + expiryHours * 3600000),
       },
-      include: { category: true },
     });
   }
 
-  // পাবলিক ফিড: অন্য ইউজারদের জন্য যারা এক্সপায়ার হয়নি
   async getPublicFeed() {
     return this.prisma.post.findMany({
-      where: {
-        expiresAt: { gt: new Date() }, // বর্তমান সময়ের বেশি হতে হবে
-        isDeleted: false,
-      },
-      include: {
-        category: true,
-        _count: { select: { responses: true } },
-      },
-      orderBy: { createdAt: 'desc' },
+      where: { expiresAt: { gt: new Date() }, isDeleted: false },
+      include: { category: true, _count: { select: { responses: true } } },
     });
   }
 
-  // পার্সোনাল হিস্টোরি: নিজের সব পোস্ট (এক্সপায়ার হলেও দেখা যাবে)
+  // ৩. এই মেথডটি মিসিং ছিল (getMyHistory)
   async getMyHistory(userId: string) {
     return this.prisma.post.findMany({
       where: { userId },
-      include: { category: true },
+      include: { category: true, _count: { select: { responses: true } } },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findOne(id: string, currentUserId?: string) {
+    const post = await this.prisma.post.findUnique({
+      where: { id },
+      include: {
+        responses: {
+          where: {
+            OR: [
+              { isHidden: false },
+              { post: { userId: currentUserId } },
+              { userId: currentUserId },
+            ],
+          },
+        },
+      },
+    });
+    if (!post) throw new NotFoundException('Post not found');
+    return post;
+  }
+
+  // ৪. এই মেথডটিও মিসিং ছিল (remove)
+  async remove(id: string, userId: string) {
+    const post = await this.prisma.post.findFirst({ where: { id, userId } });
+    if (!post) throw new ForbiddenException('You cannot delete this post');
+
+    return this.prisma.post.update({
+      where: { id },
+      data: { isDeleted: true },
     });
   }
 }

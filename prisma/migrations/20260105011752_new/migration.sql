@@ -23,6 +23,7 @@ CREATE TABLE "posts" (
     "expires_at" TIMESTAMP(3) NOT NULL,
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "is_response_default_hidden" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "posts_pkey" PRIMARY KEY ("id")
 );

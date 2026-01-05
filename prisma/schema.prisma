@@ -53,6 +53,8 @@ model Post {
   expiresAt    DateTime    @map("expires_at")
   isDeleted    Boolean     @default(false) @map("is_deleted")
   createdAt    DateTime    @default(now()) @map("created_at")
+ 
+  isResponseDefaultHidden Boolean     @default(false) @map("is_response_default_hidden")
   
   responses    Response[]
 

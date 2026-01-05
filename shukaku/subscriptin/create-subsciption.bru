@@ -4,12 +4,23 @@ meta {
   seq: 1
 }
 
-get {
-  url: 
-  body: none
+post {
+  url: http://localhost:3000/subscriptions
+  body: json
   auth: inherit
+}
+
+body:json {
+  {
+    "name": "Premium",
+    "postExpiryHours": 48,
+    "themeColor": "#FF5733",
+    "canHideResponse": true,
+    "price": 4.99
+  }
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }

@@ -1,44 +1,44 @@
 import {
   Controller,
-  Get,
   Post,
+  Delete,
+  Get,
   Body,
-  Param,
   Headers,
-  UnauthorizedException,
+  Param,
   ParseUUIDPipe,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ResponseService } from './response.service';
 import { CreateResponseDto } from './dto/create-response.dto';
-import { Response as PrismaResponse } from '../generated/prisma/client';
 
 @Controller('responses')
 export class ResponseController {
   constructor(private readonly responseService: ResponseService) {}
 
-  /**
-   * একটি নির্দিষ্ট পোস্টে নতুন রেসপন্স (Text বা Voice) তৈরি করার জন্য।
-   * হেডার থেকে user-id সংগ্রহ করা হয়।
-   */
+  // ১. পোস্টে রেসপন্স করা (অটোমেটিক হাইড লজিক এখানে কাজ করবে)
   @Post()
   async create(
     @Headers('user-id') userId: string,
-    @Body() createResponseDto: CreateResponseDto,
-  ): Promise<PrismaResponse> {
-    if (!userId) {
-      throw new UnauthorizedException('User ID is required in headers');
-    }
-    return this.responseService.create(userId, createResponseDto);
+    @Body() dto: CreateResponseDto,
+  ) {
+    if (!userId) throw new UnauthorizedException('User ID required');
+    return this.responseService.create(userId, dto);
   }
 
-  /**
-  
-   * @param postId 
-   */
+  // ২. শুধুমাত্র পাবলিক রেসপন্সগুলো দেখা (পোস্ট আইডি দিয়ে)
   @Get('post/:postId')
-  async findByPost(
-    @Param('postId', new ParseUUIDPipe()) postId: string,
-  ): Promise<PrismaResponse[]> {
-    return this.responseService.findByPost(postId);
+  async findAllByPost(@Param('postId', new ParseUUIDPipe()) postId: string) {
+    return this.responseService.findAllByPost(postId);
+  }
+
+  // ৩. নিজের করা রেসপন্স ডিলিট করা
+  @Delete(':id')
+  async remove(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Headers('user-id') userId: string,
+  ) {
+    if (!userId) throw new UnauthorizedException('User ID required');
+    return this.responseService.remove(id, userId);
   }
 }

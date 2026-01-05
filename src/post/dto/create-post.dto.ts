@@ -3,12 +3,11 @@ import {
   IsNotEmpty,
   IsOptional,
   IsEnum,
-  IsUUID,
+  IsBoolean,
 } from 'class-validator';
 import { ContentType } from '../../generated/prisma/client';
 
 export class CreatePostDto {
-  @IsUUID()
   @IsNotEmpty()
   categoryId: string;
 
@@ -16,11 +15,15 @@ export class CreatePostDto {
   @IsNotEmpty()
   contentType: ContentType;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   textContent?: string;
 
-  @IsString()
   @IsOptional()
-  voiceUrl?: string;
+  @IsString()
+  voiceUrl?: string; // ভয়েস পোস্টের জন্য URL
+
+  @IsOptional()
+  @IsBoolean()
+  isResponseDefaultHidden?: boolean; // প্রিমিয়াম ইউজারের প্রেফারেন্স
 }
