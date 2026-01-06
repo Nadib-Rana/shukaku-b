@@ -29,6 +29,7 @@ export class PostService {
         categoryId: dto.categoryId,
         contentType: dto.contentType,
         textContent: dto.textContent,
+        PostType: dto.postType,
         voiceUrl: dto.voiceUrl,
         isResponseDefaultHidden: hidePref,
         expiresAt: new Date(Date.now() + expiryHours * 3600000),
