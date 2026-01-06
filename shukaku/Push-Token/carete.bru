@@ -1,0 +1,27 @@
+meta {
+  name: carete
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/push-tokens
+  body: json
+  auth: inherit
+}
+
+headers {
+  user-id: 4ab8cad5-93a2-4b2c-bd19-123a8d876063
+}
+
+body:json {
+  {
+    "deviceToken": "fcm_token_example_1234567890_android_secure_hash",
+    "platform": "android"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

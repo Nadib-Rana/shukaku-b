@@ -20,6 +20,13 @@ enum ContentType {
   VOICE
 }
 
+enum PostType {
+  SILVER
+  GOLD
+  URGENT
+}
+
+
 model User {
   id             String        @id @default(uuid()) @db.Uuid
   anonymousId    String        @unique @map("anonymous_id") // The device hash
@@ -55,6 +62,7 @@ model Post {
   createdAt    DateTime    @default(now()) @map("created_at")
  
   isResponseDefaultHidden Boolean     @default(false) @map("is_response_default_hidden")
+  PostType     PostType   @default(SILVER) @map("post_type")
   
   responses    Response[]
 
@@ -128,7 +136,7 @@ model PushToken {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   deviceToken String   @map("device_token")
-  platform    String
+  platform    String?
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@map("push_tokens")

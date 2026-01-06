@@ -1,12 +1,11 @@
-import { IsString, IsNotEmpty, IsIn } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 
 export class CreatePushTokenDto {
   @IsString()
   @IsNotEmpty()
   deviceToken: string;
 
-  @IsString()
-  @IsNotEmpty()
-  @IsIn(['ios', 'android'])
-  platform: string;
+  // @IsString()
+  // @IsIn(['ios', 'android'])
+  // platform: string;
 }
