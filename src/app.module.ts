@@ -16,6 +16,7 @@ import { CategoryModule } from './category/category.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { PurchaseModule } from './purchase/purchase.module';
 import { PushTokenModule } from './push-token/push-token.module';
+import { FavoriteModule } from './favorite/favorite.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { PushTokenModule } from './push-token/push-token.module';
     SubscriptionModule,
     PurchaseModule,
     PushTokenModule,
+    FavoriteModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,0 +1,20 @@
+meta {
+  name: get-all-favorites-post
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:3000/favorites
+  body: none
+  auth: inherit
+}
+
+headers {
+  user-id: 412a2feb-136b-4890-8f54-0108958630e9
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
