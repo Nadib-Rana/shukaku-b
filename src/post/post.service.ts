@@ -4,13 +4,17 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { MinioService } from '../minio/minio.service';
 import { CreatePostDto } from './dto/create-post.dto';
 
 @Injectable()
 export class PostService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private minioService: MinioService,
+  ) {}
 
-  async create(userId: string, dto: CreatePostDto) {
+  async create(userId: string, dto: CreatePostDto, file?: Express.Multer.File) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { subscription: true },
@@ -18,19 +22,24 @@ export class PostService {
 
     if (!user) throw new NotFoundException('User not found');
 
+    // ভয়েস ফাইল আপলোড লজিক
+    let finalVoiceUrl = dto.voiceUrl;
+    if (file) {
+      finalVoiceUrl = await this.minioService.uploadVoice(file);
+    }
+
     const canHide = user.subscription?.canHideResponse || false;
     const hidePref = canHide ? (dto.isResponseDefaultHidden ?? false) : false;
-
     const expiryHours = user.subscription?.postExpiryHours || 24;
 
     return this.prisma.post.create({
       data: {
         userId,
         categoryId: dto.categoryId,
-        contentType: dto.contentType,
+        contentType: file ? 'VOICE' : dto.contentType,
         textContent: dto.textContent,
         PostType: dto.postType,
-        voiceUrl: dto.voiceUrl,
+        voiceUrl: finalVoiceUrl,
         isResponseDefaultHidden: hidePref,
         expiresAt: new Date(Date.now() + expiryHours * 3600000),
       },
@@ -38,13 +47,17 @@ export class PostService {
   }
 
   async getPublicFeed() {
+    console.log('git for check.');
     return this.prisma.post.findMany({
       where: { expiresAt: { gt: new Date() }, isDeleted: false },
-      include: { category: true, _count: { select: { responses: true } } },
+      include: {
+        category: true,
+        _count: { select: { favorites: true, responses: true } },
+      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
-  // ৩. এই মেথডটি মিসিং ছিল (getMyHistory)
   async getMyHistory(userId: string) {
     return this.prisma.post.findMany({
       where: { userId },
@@ -57,6 +70,13 @@ export class PostService {
     const post = await this.prisma.post.findUnique({
       where: { id },
       include: {
+        category: true,
+        user: {
+          select: {
+            id: true,
+            anonymousId: true,
+          },
+        },
         responses: {
           where: {
             OR: [
@@ -65,14 +85,20 @@ export class PostService {
               { userId: currentUserId },
             ],
           },
+          include: {
+            user: { select: { id: true, anonymousId: true } },
+          },
+        },
+        _count: {
+          select: { favorites: true, responses: true },
         },
       },
     });
+
     if (!post) throw new NotFoundException('Post not found');
     return post;
   }
 
-  // ৪. এই মেথডটিও মিসিং ছিল (remove)
   async remove(id: string, userId: string) {
     const post = await this.prisma.post.findFirst({ where: { id, userId } });
     if (!post) throw new ForbiddenException('You cannot delete this post');

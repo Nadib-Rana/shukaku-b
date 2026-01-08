@@ -26,10 +26,14 @@
     "db:push": "prisma db push",
     "setup": "bun install && bun run db:generate && bun run db:migrate",
     "db:docker": "docker start nest_postgres",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "nadib1": "docker compose up -d", //samiul vai
+    "nadib2": "nest start" //samiul vai
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.965.0",
     "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/mapped-types": "*",
@@ -40,6 +44,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "dotenv": "^17.2.3",
+    "minio": "^8.0.6",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "prisma": "^7.0.1",
@@ -55,6 +60,7 @@
     "@nestjs/testing": "^11.0.1",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
+    "@types/multer": "^2.0.0",
     "@types/node": "^24.10.1",
     "@types/supertest": "^6.0.2",
     "@types/uuid": "^11.0.0",

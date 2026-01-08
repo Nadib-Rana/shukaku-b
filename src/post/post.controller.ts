@@ -8,8 +8,10 @@ import {
   Param,
   ParseUUIDPipe,
   UnauthorizedException,
-  // ForbiddenException,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 
@@ -18,9 +20,14 @@ export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Post()
-  async create(@Headers('user-id') userId: string, @Body() dto: CreatePostDto) {
+  @UseInterceptors(FileInterceptor('voiceFile'))
+  async create(
+    @Headers('user-id') userId: string,
+    @Body() dto: CreatePostDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
     if (!userId) throw new UnauthorizedException('User ID required');
-    return await this.postService.create(userId, dto);
+    return await this.postService.create(userId, dto, file);
   }
 
   @Get()
@@ -31,16 +38,15 @@ export class PostController {
   @Get('history')
   async getHistory(@Headers('user-id') userId: string) {
     if (!userId) throw new UnauthorizedException('User ID required');
-    // ২. 'await' যুক্ত করা হয়েছে এরর দূর করতে
     return await this.postService.getMyHistory(userId);
   }
 
   @Get(':id')
   async findOne(
     @Param('id', new ParseUUIDPipe()) id: string,
-    // @Headers('user-id') userId?: string,
+    @Headers('user-id') userId?: string,
   ) {
-    return await this.postService.findOne(id);
+    return await this.postService.findOne(id, userId);
   }
 
   @Delete(':id')

@@ -17,6 +17,7 @@ import { SubscriptionModule } from './subscription/subscription.module';
 import { PurchaseModule } from './purchase/purchase.module';
 import { PushTokenModule } from './push-token/push-token.module';
 import { FavoriteModule } from './favorite/favorite.module';
+import { MinioModule } from './minio/minio.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { FavoriteModule } from './favorite/favorite.module';
     PurchaseModule,
     PushTokenModule,
     FavoriteModule,
+    MinioModule,
   ],
   controllers: [AppController],
   providers: [
