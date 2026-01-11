@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { ResponseService } from './response.service';
 import { CreateResponseDto } from './dto/create-response.dto';
+import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
 
 @Controller('responses')
 export class ResponseController {
@@ -18,6 +19,7 @@ export class ResponseController {
 
   // ১. পোস্টে রেসপন্স করা (অটোমেটিক হাইড লজিক এখানে কাজ করবে)
   @Post()
+  @ResponseMessage('Create response successfully')
   async create(
     @Headers('user-id') userId: string,
     @Body() dto: CreateResponseDto,
@@ -28,12 +30,14 @@ export class ResponseController {
 
   // ২. শুধুমাত্র পাবলিক রেসপন্সগুলো দেখা (পোস্ট আইডি দিয়ে)
   @Get('post/:postId')
+  @ResponseMessage('Get the public responses')
   async findAllByPost(@Param('postId', new ParseUUIDPipe()) postId: string) {
     return this.responseService.findAllByPost(postId);
   }
 
   // ৩. নিজের করা রেসপন্স ডিলিট করা
   @Delete(':id')
+  @ResponseMessage('Delete response succefully')
   async remove(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Headers('user-id') userId: string,
