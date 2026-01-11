@@ -22,7 +22,7 @@ export class PostService {
 
     if (!user) throw new NotFoundException('User not found');
 
-    // ভয়েস ফাইল আপলোড লজিক
+    // voiec file upload logic
     let finalVoiceUrl = dto.voiceUrl;
     if (file) {
       finalVoiceUrl = await this.minioService.uploadVoice(file);
@@ -47,9 +47,24 @@ export class PostService {
   }
 
   async getPublicFeed() {
-    console.log('git for check.');
+    console.log('Hit for check.');
     return this.prisma.post.findMany({
       where: { expiresAt: { gt: new Date() }, isDeleted: false },
+      include: {
+        category: true,
+        _count: { select: { favorites: true, responses: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findByCategory(categoryId: string) {
+    return this.prisma.post.findMany({
+      where: {
+        categoryId,
+        isDeleted: false,
+        expiresAt: { gt: new Date() },
+      },
       include: {
         category: true,
         _count: { select: { favorites: true, responses: true } },

@@ -35,6 +35,13 @@ export class PostController {
     return await this.postService.getPublicFeed();
   }
 
+  @Get('category/:categoryId')
+  async getByCategory(
+    @Param('categoryId', new ParseUUIDPipe()) categoryId: string,
+  ) {
+    return await this.postService.findByCategory(categoryId);
+  }
+
   @Get('history')
   async getHistory(@Headers('user-id') userId: string) {
     if (!userId) throw new UnauthorizedException('User ID required');

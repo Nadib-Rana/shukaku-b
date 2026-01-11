@@ -67,7 +67,7 @@ export class MinioService implements OnModuleInit {
         fileName,
         file.buffer,
         file.size,
-        { 'Content-Type': file.mimetype || 'audio/webm/mb3' },
+        { 'Content-Type': file.mimetype || 'audio/webm/mb3/mp3/m4a' },
       );
 
       const baseUrl = this.configService.get<string>(
