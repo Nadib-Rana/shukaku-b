@@ -2,17 +2,45 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule'; // Cron ইম্পোর্ট করা হয়েছে
 import { PrismaService } from '../prisma.service';
 import { MinioService } from '../minio/minio.service';
 import { CreatePostDto } from './dto/create-post.dto';
 
 @Injectable()
 export class PostService {
+  private readonly logger = new Logger(PostService.name);
+
   constructor(
     private prisma: PrismaService,
     private minioService: MinioService,
   ) {}
+
+  // Cron Job run par 1min
+  @Cron(CronExpression.EVERY_MINUTE)
+  async handleExpiredPosts() {
+    const now = new Date();
+    console.log('Run cron Job:', new Date().toLocaleString());
+    try {
+      const result = await this.prisma.post.updateMany({
+        where: {
+          expiresAt: { lt: now }, // currect > expired time
+          isDeleted: false, // currect < expired time
+        },
+        data: {
+          isDeleted: true, // update status
+        },
+      });
+
+      if (result.count > 0) {
+        this.logger.log(`Auto-expired ${result.count} posts.`);
+      }
+    } catch (error) {
+      this.logger.error('Error while updating expired posts', error);
+    }
+  }
 
   async create(userId: string, dto: CreatePostDto, file?: Express.Multer.File) {
     const user = await this.prisma.user.findUnique({
@@ -22,7 +50,6 @@ export class PostService {
 
     if (!user) throw new NotFoundException('User not found');
 
-    // voiec file upload logic
     let finalVoiceUrl = dto.voiceUrl;
     if (file) {
       finalVoiceUrl = await this.minioService.uploadVoice(file);
@@ -36,7 +63,7 @@ export class PostService {
       data: {
         userId,
         categoryId: dto.categoryId,
-        contentType: file ? 'VOICE' : dto.contentType,
+        contentType: file ? 'TEXT' : dto.contentType,
         textContent: dto.textContent,
         PostType: dto.postType,
         voiceUrl: finalVoiceUrl,
@@ -47,7 +74,7 @@ export class PostService {
   }
 
   async getPublicFeed() {
-    console.log('Hit for check.');
+    console.log('Hit for get all post');
     return this.prisma.post.findMany({
       where: { expiresAt: { gt: new Date() }, isDeleted: false },
       include: {

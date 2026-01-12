@@ -27,8 +27,8 @@
     "setup": "bun install && bun run db:generate && bun run db:migrate",
     "db:docker": "docker start nest_postgres",
     "db:studio": "prisma studio",
-    "nadib1": "docker compose up -d", //samiul vai
-    "nadib2": "nest start" //samiul vai
+    "nadib1": "docker compose up -d",
+    "nadib2": "nest start"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.965.0",
@@ -38,6 +38,7 @@
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/schedule": "^6.1.0",
     "@prisma/adapter-pg": "^7.0.1",
     "@prisma/client": "^7.0.1",
     "bcrypt": "^6.0.0",

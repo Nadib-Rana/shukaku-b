@@ -18,9 +18,11 @@ import { PurchaseModule } from './purchase/purchase.module';
 import { PushTokenModule } from './push-token/push-token.module';
 import { FavoriteModule } from './favorite/favorite.module';
 import { MinioModule } from './minio/minio.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ContextModule,
     UserModule,
     PrismaModule,

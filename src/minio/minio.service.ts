@@ -14,7 +14,7 @@ export class MinioService implements OnModuleInit {
   private readonly bucketName: string;
 
   constructor(private configService: ConfigService) {
-    // কনফিগারেশন রিসিভ করা
+    // Configaration recive kora
     this.minioClient = new Minio.Client({
       endPoint: this.configService.get<string>('MINIO_ENDPOINT', 'localhost'),
       port: parseInt(this.configService.get<string>('MINIO_PORT', '9000')),
