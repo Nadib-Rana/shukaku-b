@@ -1,6 +1,9 @@
 -- CreateEnum
 CREATE TYPE "ContentType" AS ENUM ('TEXT', 'VOICE');
 
+-- CreateEnum
+CREATE TYPE "PostType" AS ENUM ('SILVER', 'GOLD', 'URGENT');
+
 -- CreateTable
 CREATE TABLE "users" (
     "id" UUID NOT NULL,
@@ -24,6 +27,7 @@ CREATE TABLE "posts" (
     "is_deleted" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "is_response_default_hidden" BOOLEAN NOT NULL DEFAULT false,
+    "post_type" "PostType" NOT NULL DEFAULT 'SILVER',
 
     CONSTRAINT "posts_pkey" PRIMARY KEY ("id")
 );
@@ -84,10 +88,20 @@ CREATE TABLE "push_tokens" (
     "id" UUID NOT NULL,
     "user_id" UUID NOT NULL,
     "device_token" TEXT NOT NULL,
-    "platform" TEXT NOT NULL,
+    "platform" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "push_tokens_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "favorites" (
+    "id" UUID NOT NULL,
+    "userId" UUID NOT NULL,
+    "postId" UUID NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "favorites_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -98,6 +112,9 @@ CREATE INDEX "posts_expires_at_idx" ON "posts"("expires_at");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "categories_name_key" ON "categories"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "favorites_userId_postId_key" ON "favorites"("userId", "postId");
 
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_subscription_id_fkey" FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -122,3 +139,9 @@ ALTER TABLE "purchases" ADD CONSTRAINT "purchases_subscription_id_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "push_tokens" ADD CONSTRAINT "push_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "favorites" ADD CONSTRAINT "favorites_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "favorites" ADD CONSTRAINT "favorites_postId_fkey" FOREIGN KEY ("postId") REFERENCES "posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
