@@ -28,7 +28,9 @@ export class PostController {
     @Body() dto: CreatePostDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
+    // console.log('CreatePostDto', dto);
     if (!userId) throw new UnauthorizedException('User ID required');
+    // console.log('This is controllar', dto);
     return await this.postService.create(userId, dto, file);
   }
 

@@ -1,11 +1,12 @@
 import {
-  IsString,
+  IsBoolean,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
-  IsEnum,
-  IsBoolean,
+  IsString,
   IsUUID,
 } from 'class-validator';
+import { Transform, TransformFnParams } from 'class-transformer';
 import { ContentType, PostType } from '../../generated/prisma/client';
 
 export class CreatePostDto {
@@ -25,6 +26,13 @@ export class CreatePostDto {
   voiceUrl?: string;
 
   @IsOptional()
+  @Transform(({ value }: TransformFnParams) => {
+    // Postman form-data থেকে আসা স্ট্রিং বা Implicit conversion থেকে আসা বুলিয়ান হ্যান্ডল করা
+    console.log('This is a dto:', value);
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return undefined;
+  })
   @IsBoolean()
   isResponseDefaultHidden?: boolean;
 

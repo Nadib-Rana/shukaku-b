@@ -14,7 +14,7 @@ export class SubscriptionService {
         name: dto.name,
         postExpiryHours: dto.postExpiryHours,
         themeColor: dto.themeColor,
-        canHideResponse: dto.canHideResponse,
+        // canHideResponse: dto.canHideResponse,
         price: dto.price,
       },
     });

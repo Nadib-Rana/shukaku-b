@@ -3,7 +3,7 @@ import {
   IsNotEmpty,
   IsInt,
   IsOptional,
-  IsBoolean,
+  // IsBoolean,
   IsNumber,
 } from 'class-validator';
 
@@ -20,9 +20,9 @@ export class CreateSubscriptionDto {
   @IsOptional()
   themeColor?: string;
 
-  @IsBoolean()
-  @IsOptional()
-  canHideResponse?: boolean;
+  // @IsBoolean()
+  // @IsOptional()
+  // canHideResponse?: boolean;
 
   @IsNumber()
   @IsNotEmpty()

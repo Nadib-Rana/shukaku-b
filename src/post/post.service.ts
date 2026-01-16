@@ -8,6 +8,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma.service';
 import { MinioService } from '../minio/minio.service';
 import { CreatePostDto } from './dto/create-post.dto';
+import { ContentType } from '../generated/prisma/client';
 
 @Injectable()
 export class PostService {
@@ -42,7 +43,9 @@ export class PostService {
     }
   }
 
+  // ======Create Post========
   async create(userId: string, dto: CreatePostDto, file?: Express.Multer.File) {
+    // ১. ইউজার এবং সাবস্ক্রিপশন ডাটা ফেচ করা
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { subscription: true },
@@ -50,25 +53,60 @@ export class PostService {
 
     if (!user) throw new NotFoundException('User not found');
 
-    let finalVoiceUrl = dto.voiceUrl;
-    if (file) {
-      finalVoiceUrl = await this.minioService.uploadVoice(file);
+    // 2. If user buy subsciption allow for unlimited post other ways post limit will be 3
+    if (!user.subscription) {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0); // day staet from night 12pm
+
+      const postCountToday = await this.prisma.post.count({
+        where: {
+          userId: user.id,
+          createdAt: { gte: startOfDay }, // today posts
+          isDeleted: false,
+        },
+      });
+
+      if (postCountToday >= 3) {
+        throw new ForbiddenException(
+          'Normal users can only create a maximum of 3 posts per day. Please subscribe for unlimited access.',
+        );
+      }
     }
 
-    const canHide = user.subscription?.canHideResponse || false;
-    const hidePref = canHide ? (dto.isResponseDefaultHidden ?? false) : false;
-    const expiryHours = user.subscription?.postExpiryHours || 24;
+    // 3. Boolean convertion
+    const rawHiddenVal: unknown = dto.isResponseDefaultHidden;
+    const requestHiddenPref =
+      String(rawHiddenVal).toLowerCase() === 'true' || rawHiddenVal === true;
 
+    // 4. primiun access check (isResponseDefaultHidden)
+    const canHide = !!user.subscription;
+    const finalHideStatus = canHide ? requestHiddenPref : false;
+
+    // 5.contentType and file handaling
+    let finalVoiceUrl: string | undefined = dto.voiceUrl;
+    let detectedContentType: ContentType = dto.contentType;
+
+    if (file) {
+      finalVoiceUrl = await this.minioService.uploadVoice(file);
+      detectedContentType = ContentType.VOICE;
+    }
+
+    // ৬. Expiryhours condition check
+    const expiryHours = user.subscription?.postExpiryHours ?? 24;
+    const expirationDate = new Date();
+    expirationDate.setHours(expirationDate.getHours() + expiryHours);
+
+    // ৭. Data save into the database
     return this.prisma.post.create({
       data: {
-        userId,
+        userId: user.id,
         categoryId: dto.categoryId,
-        contentType: file ? 'TEXT' : dto.contentType,
-        textContent: dto.textContent,
+        contentType: detectedContentType,
+        textContent: dto.textContent ?? null,
+        voiceUrl: finalVoiceUrl ?? null,
+        isResponseDefaultHidden: finalHideStatus,
         PostType: dto.postType,
-        voiceUrl: finalVoiceUrl,
-        isResponseDefaultHidden: hidePref,
-        expiresAt: new Date(Date.now() + expiryHours * 3600000),
+        expiresAt: expirationDate,
       },
     });
   }

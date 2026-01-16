@@ -108,7 +108,7 @@ model Subscription {
   name              String   
   postExpiryHours   Int      @map("post_expiry_hours")
   themeColor        String?  @map("theme_color")
-  canHideResponse   Boolean  @default(false) @map("can_hide_response")
+  // canHideResponse   Boolean  @default(false) @map("can_hide_response")
   price             Decimal  @db.Decimal(10, 2)
   
   users             User[]
