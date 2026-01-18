@@ -59,7 +59,7 @@ export class MinioService implements OnModuleInit {
 
   async uploadVoice(file: Express.Multer.File): Promise<string> {
     try {
-      const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}-voice.webm`;
+      const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}-voice.mp3`;
 
       // MinIO-te object push kora
       await this.minioClient.putObject(
