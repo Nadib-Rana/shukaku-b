@@ -27,7 +27,7 @@ export class PushTokenService {
       data: {
         userId,
         deviceToken: dto.deviceToken,
-        platform: dto.platform,
+        // platform: dto.platform,
       },
     });
   }

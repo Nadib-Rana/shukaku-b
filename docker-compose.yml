@@ -1,3 +1,27 @@
+# services:
+#   postgres:
+#     image: postgres:17
+#     container_name: nest_postgres
+#     restart: no
+#     environment:
+#       POSTGRES_USER: nest_js
+#       POSTGRES_PASSWORD: nest_js
+#       POSTGRES_DB: nest_js
+#     ports:
+#       - '6090:5432'
+#     volumes:
+#       - nest_postgres:/var/lib/postgresql/data
+#     networks:
+#       - nest_network
+
+# networks:
+#   nest_network:
+#     driver: bridge
+
+# volumes:
+#   nest_postgres:
+#     driver: local
+
 services:
   postgres:
     image: postgres:17
@@ -14,10 +38,28 @@ services:
     networks:
       - nest_network
 
+  minio:
+    image: minio/minio:latest
+    container_name: nest_minio
+    restart: no
+    ports:
+      - '9000:9000' # MinIO API
+      - '9001:9001' # MinIO Console
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    volumes:
+      - nest_minio:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - nest_network
+
 networks:
   nest_network:
     driver: bridge
 
 volumes:
   nest_postgres:
+    driver: local
+  nest_minio:
     driver: local

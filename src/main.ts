@@ -15,9 +15,9 @@ async function bootstrap() {
       whitelist: true, // Strip properties not in DTO
       transform: true, // Automatically transform payloads to DTO instances
       forbidNonWhitelisted: true, // Throw error on non-whitelisted properties
-      transformOptions: {
-        enableImplicitConversion: true, // Convert query/path params
-      },
+      // transformOptions: {
+      //   enableImplicitConversion: true, // Convert query/path params
+      // },
     }),
   );
 
