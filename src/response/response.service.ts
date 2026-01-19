@@ -5,47 +5,77 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateResponseDto } from './dto/create-response.dto';
+import { NotificationService } from '../notification/notification.service';
 import { Response } from '../generated/prisma/client';
 
 @Injectable()
 export class ResponseService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   async create(userId: string, dto: CreateResponseDto): Promise<Response> {
-    // ১. কাস্টিং ছাড়াই রেজাল্ট নিন
+    // 1. Fetch Post to check privacy settings and owner
     const post = await this.prisma.post.findUnique({
       where: { id: dto.postId },
     });
 
-    // ২. টাইপ গার্ড: চেক করুন পোস্ট আছে কি না
-    if (!post) {
-      throw new NotFoundException('Post not found');
-    }
+    if (!post) throw new NotFoundException('Post not found');
 
-    // ৩. সরাসরি ভ্যালু ব্যবহার না করে টাইপ নিশ্চিত করুন
+    // 2. Determine visibility based on Post settings
     const finalIsHidden: boolean = post.isResponseDefaultHidden === true;
 
-    return this.prisma.response.create({
+    // 3. Create the Response
+    const response = await this.prisma.response.create({
       data: {
         postId: dto.postId,
         userId: userId,
         contentType: dto.contentType,
         textContent: dto.textContent,
         voiceUrl: dto.voiceUrl,
+        parentResponseId: dto.parentResponseId,
         isHidden: finalIsHidden,
       },
     });
+
+    // 4. Handle Notifications
+    if (dto.parentResponseId) {
+      // Logic for REPLY_TO_MY_RESPONSE
+      const parent = await this.prisma.response.findUnique({
+        where: { id: dto.parentResponseId },
+      });
+      if (parent) {
+        await this.notificationService.create({
+          userId: parent.userId,
+          triggerUserId: userId,
+          type: 'REPLY_TO_MY_RESPONSE',
+          postId: dto.postId,
+          responseId: response.id,
+          parentResponseId: parent.id,
+        });
+      }
+    } else {
+      // Logic for RESPONSE_TO_POST
+      await this.notificationService.create({
+        userId: post.userId,
+        triggerUserId: userId,
+        type: 'RESPONSE_TO_POST',
+        postId: post.id,
+        responseId: response.id,
+      });
+    }
+
+    return response;
   }
 
   async findAllByPost(postId: string): Promise<Response[]> {
     return this.prisma.response.findMany({
-      where: {
-        postId: postId,
-        isHidden: false,
-      },
+      where: { postId, isHidden: false },
       include: {
-        user: {
-          select: { anonymousId: true },
+        user: { select: { anonymousId: true } },
+        replies: {
+          include: { user: { select: { anonymousId: true } } },
         },
       },
       orderBy: { createdAt: 'asc' },
@@ -53,20 +83,13 @@ export class ResponseService {
   }
 
   async remove(id: string, userId: string): Promise<Response> {
-    // ১. কাস্টিং ছাড়া রেজাল্ট নিন
     const response = await this.prisma.response.findFirst({
       where: { id, userId },
     });
 
-    // ২. টাইপ গার্ড
-    if (!response) {
-      throw new ForbiddenException(
-        'You are not allowed to delete this response',
-      );
-    }
+    if (!response)
+      throw new ForbiddenException('Not allowed to delete this response');
 
-    return this.prisma.response.delete({
-      where: { id },
-    });
+    return this.prisma.response.delete({ where: { id } });
   }
 }

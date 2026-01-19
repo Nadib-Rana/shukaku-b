@@ -23,4 +23,8 @@ export class CreateResponseDto {
   @IsString()
   @IsOptional()
   voiceUrl?: string;
+
+  @IsUUID()
+  @IsOptional()
+  parentResponseId?: string;
 }

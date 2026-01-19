@@ -4,6 +4,9 @@ CREATE TYPE "ContentType" AS ENUM ('TEXT', 'VOICE');
 -- CreateEnum
 CREATE TYPE "PostType" AS ENUM ('SILVER', 'GOLD', 'URGENT');
 
+-- CreateEnum
+CREATE TYPE "NotificationType" AS ENUM ('RESPONSE_TO_POST', 'REPLY_TO_MY_RESPONSE', 'NEW_FAVORITE');
+
 -- CreateTable
 CREATE TABLE "users" (
     "id" UUID NOT NULL,
@@ -24,7 +27,7 @@ CREATE TABLE "posts" (
     "text_content" TEXT,
     "voice_url" TEXT,
     "expires_at" TIMESTAMP(3) NOT NULL,
-    "is_deleted" BOOLEAN NOT NULL DEFAULT false,
+    "is_deleted" BOOLEAN DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "is_response_default_hidden" BOOLEAN NOT NULL DEFAULT false,
     "post_type" "PostType" NOT NULL DEFAULT 'SILVER',
@@ -40,6 +43,7 @@ CREATE TABLE "responses" (
     "content_type" "ContentType" NOT NULL,
     "text_content" TEXT,
     "voice_url" TEXT,
+    "parent_response_id" UUID,
     "is_hidden" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -62,7 +66,6 @@ CREATE TABLE "subscriptions" (
     "name" TEXT NOT NULL,
     "post_expiry_hours" INTEGER NOT NULL,
     "theme_color" TEXT,
-    "can_hide_response" BOOLEAN NOT NULL DEFAULT false,
     "price" DECIMAL(10,2) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -104,6 +107,22 @@ CREATE TABLE "favorites" (
     CONSTRAINT "favorites_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "notifications" (
+    "id" UUID NOT NULL,
+    "user_id" UUID NOT NULL,
+    "type" "NotificationType" NOT NULL,
+    "trigger_user_id" UUID NOT NULL,
+    "post_id" UUID,
+    "response_id" UUID,
+    "parent_response_id" UUID,
+    "favorite_id" UUID,
+    "is_read" BOOLEAN NOT NULL DEFAULT false,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "notifications_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_anonymous_id_key" ON "users"("anonymous_id");
 
@@ -111,10 +130,22 @@ CREATE UNIQUE INDEX "users_anonymous_id_key" ON "users"("anonymous_id");
 CREATE INDEX "posts_expires_at_idx" ON "posts"("expires_at");
 
 -- CreateIndex
+CREATE INDEX "responses_post_id_created_at_idx" ON "responses"("post_id", "created_at");
+
+-- CreateIndex
+CREATE INDEX "responses_parent_response_id_created_at_idx" ON "responses"("parent_response_id", "created_at");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "categories_name_key" ON "categories"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "favorites_userId_postId_key" ON "favorites"("userId", "postId");
+
+-- CreateIndex
+CREATE INDEX "notifications_user_id_created_at_idx" ON "notifications"("user_id", "created_at");
+
+-- CreateIndex
+CREATE INDEX "notifications_user_id_is_read_created_at_idx" ON "notifications"("user_id", "is_read", "created_at");
 
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_subscription_id_fkey" FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -132,6 +163,9 @@ ALTER TABLE "responses" ADD CONSTRAINT "responses_post_id_fkey" FOREIGN KEY ("po
 ALTER TABLE "responses" ADD CONSTRAINT "responses_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "responses" ADD CONSTRAINT "responses_parent_response_id_fkey" FOREIGN KEY ("parent_response_id") REFERENCES "responses"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "purchases" ADD CONSTRAINT "purchases_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -145,3 +179,21 @@ ALTER TABLE "favorites" ADD CONSTRAINT "favorites_userId_fkey" FOREIGN KEY ("use
 
 -- AddForeignKey
 ALTER TABLE "favorites" ADD CONSTRAINT "favorites_postId_fkey" FOREIGN KEY ("postId") REFERENCES "posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_trigger_user_id_fkey" FOREIGN KEY ("trigger_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "posts"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_response_id_fkey" FOREIGN KEY ("response_id") REFERENCES "responses"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_parent_response_id_fkey" FOREIGN KEY ("parent_response_id") REFERENCES "responses"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_favorite_id_fkey" FOREIGN KEY ("favorite_id") REFERENCES "favorites"("id") ON DELETE SET NULL ON UPDATE CASCADE;

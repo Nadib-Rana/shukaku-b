@@ -2,10 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateFavoriteDto } from './dto/create-favorite.dto';
 import { Favorite } from '../generated/prisma/client';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class FavoriteService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   async toggleFavorite(
     userId: string,
@@ -36,11 +40,20 @@ export class FavoriteService {
     }
 
     // ৩. যদি না থাকে তবে অ্যাড করুন (Toggle on)
-    await this.prisma.favorite.create({
+    const newFavorite = await this.prisma.favorite.create({
       data: {
         userId: userId,
         postId: dto.postId,
       },
+    });
+
+    // 🔔 Notification logic added here
+    await this.notificationService.create({
+      userId: post.userId,
+      triggerUserId: userId,
+      type: 'NEW_FAVORITE',
+      postId: post.id,
+      favoriteId: newFavorite.id,
     });
 
     return { favorited: true, message: 'Added to favorites' };

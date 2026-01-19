@@ -19,6 +19,7 @@ import { PushTokenModule } from './push-token/push-token.module';
 import { FavoriteModule } from './favorite/favorite.module';
 import { MinioModule } from './minio/minio.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     PushTokenModule,
     FavoriteModule,
     MinioModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [

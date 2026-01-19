@@ -27,7 +27,11 @@ enum PostType {
 }
 
 
-
+enum NotificationType {
+  RESPONSE_TO_POST
+  REPLY_TO_MY_RESPONSE
+  NEW_FAVORITE
+}
 
 model User {
   id             String        @id @default(uuid()) @db.Uuid
@@ -35,12 +39,18 @@ model User {
   
   subscriptionId String?       @db.Uuid @map("subscription_id")
   subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
-  
+
+
   posts          Post[]
   responses      Response[]
   pushTokens     PushToken[]
   purchases      Purchase[]
   favorites      Favorite[]
+
+  // Notification related
+  notifications          Notification[] @relation("UserNotifications")
+  triggeredNotifications Notification[] @relation("TriggeredBy")
+  
 
   createdAt      DateTime      @default(now()) @map("created_at")
   lastActiveAt   DateTime?     @map("last_active_at")
@@ -61,7 +71,7 @@ model Post {
   voiceUrl     String?     @map("voice_url") @db.Text
   
   expiresAt    DateTime    @map("expires_at")
-  isDeleted    Boolean     @default(false) @map("is_deleted")
+  isDeleted    Boolean?     @default(false) @map("is_deleted")
   createdAt    DateTime    @default(now()) @map("created_at")
  
   isResponseDefaultHidden Boolean     @default(false) @map("is_response_default_hidden")
@@ -69,6 +79,7 @@ model Post {
   
   responses    Response[]
   favorites Favorite[]
+  notifications Notification[]
 
   @@map("posts")
   @@index([expiresAt])
@@ -86,10 +97,22 @@ model Response {
   contentType  ContentType @map("content_type")
   textContent  String?     @map("text_content") @db.Text
   voiceUrl     String?     @map("voice_url") @db.Text
+
+// nested response
+  parentResponseId String?    @map("parent_response_id") @db.Uuid
+  parentResponse   Response?  @relation("ResponseToResponse", fields: [parentResponseId], references: [id], onDelete: SetNull)
+  replies          Response[] @relation("ResponseToResponse")
+
+// For Notifications (2 relation)
+  notifications       Notification[] @relation("ResponseNotifications")
+  parentNotifications Notification[] @relation("ParentNotification")
+
   
   isHidden     Boolean     @default(false) @map("is_hidden")
   createdAt    DateTime    @default(now()) @map("created_at")
 
+  @@index([postId, createdAt(Sort.Asc)]) 
+  @@index([parentResponseId, createdAt]) 
   @@map("responses")
 }
 
@@ -131,7 +154,7 @@ model Purchase {
   purchaseDate   DateTime     @map("purchase_date")
   expiryDate     DateTime?    @map("expiry_date")
   status         String       
-
+  
   @@map("purchases")
 }
 
@@ -156,6 +179,41 @@ model Favorite {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 
+// For Notifications (relation)
+  notifications Notification[] @relation("FavoriteNotifications")
+ 
   @@unique([userId, postId])  
   @@map("favorites")
+
+}
+
+model Notification {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  type NotificationType
+
+  triggerUserId String @map("trigger_user_id") @db.Uuid
+  triggerUser   User   @relation("TriggeredBy", fields: [triggerUserId], references: [id])
+
+  postId String? @map("post_id") @db.Uuid
+  post   Post?   @relation(fields: [postId], references: [id], onDelete: SetNull)
+
+  responseId String?   @map("response_id") @db.Uuid
+  response   Response? @relation("ResponseNotifications", fields: [responseId], references: [id], onDelete: SetNull)
+  
+  parentResponseId String?   @map("parent_response_id") @db.Uuid
+  parentResponse   Response? @relation("ParentNotification", fields: [parentResponseId], references: [id], onDelete: SetNull)
+  
+  favoriteId String?   @map("favorite_id") @db.Uuid
+  favorite   Favorite? @relation("FavoriteNotifications", fields: [favoriteId], references: [id], onDelete: SetNull)
+   
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt(Sort.Desc)])
+  @@index([userId, isRead, createdAt(Sort.Desc)])
+  @@map("notifications")
 }
