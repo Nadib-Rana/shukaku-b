@@ -12,7 +12,7 @@ export class NotificationService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateNotificationDto): Promise<PrismaNotification | null> {
-    // নিজের কাজে নিজে নোটিফিকেশন পাবে না
+    // No notification for own post
     if (dto.userId === dto.triggerUserId) return null;
 
     return await this.prisma.notification.create({
@@ -28,7 +28,6 @@ export class NotificationService {
     });
   }
 
-  // সুনির্দিষ্ট টাইপ রিটার্ন করা হচ্ছে যাতে 'any[]' এরর না আসে
   async findAll(userId: string): Promise<PrismaNotification[]> {
     const notifications = await this.prisma.notification.findMany({
       where: { userId },

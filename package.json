@@ -28,7 +28,9 @@
     "db:docker": "docker start nest_postgres",
     "db:studio": "prisma studio",
     "nadib1": "docker compose up -d",
-    "nadib2": "nest start"
+    "nadib2": "nest start",
+    "docker1": "docker build -t nadibsoft/shukako:latest",
+    "docker2": "docker push nadibsoft/shukako:latest"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.965.0",
