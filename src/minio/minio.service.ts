@@ -29,14 +29,14 @@ export class MinioService implements OnModuleInit {
 
   async onModuleInit() {
     try {
-      // বাকেট চেক করা এবং তৈরি করা
+      // check or create bucket
       const exists = await this.minioClient.bucketExists(this.bucketName);
       if (!exists) {
         await this.minioClient.makeBucket(this.bucketName);
         this.logger.log(`Bucket "${this.bucketName}" created successfully.`);
       }
 
-      // বাকেট আগে থেকে থাকলেও পাবলিক রিড পলিসি পুনরায় নিশ্চিত করা (যাতে PRIVATE এরর না আসে)
+      // privecy setup
       const policy = {
         Version: '2012-10-17',
         Statement: [
@@ -64,11 +64,11 @@ export class MinioService implements OnModuleInit {
 
   async uploadVoice(file: Express.Multer.File): Promise<string> {
     try {
-      // এক্সটেনশন ঠিক করা
+      // extation setup and condition
       const extension = file.mimetype.split('/')[1] || 'mp3';
       const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}-voice.${extension}`;
 
-      // Metadata-তে Content-Type পাঠানো অত্যন্ত জরুরি প্লেব্যাক এর জন্য
+      // Metadata- Content-Type
       await this.minioClient.putObject(
         this.bucketName,
         fileName,

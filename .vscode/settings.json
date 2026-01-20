@@ -27,5 +27,15 @@
     "titleBar.inactiveBackground": "#03d06899",
     "titleBar.inactiveForeground": "#15202b99"
   },
-  "peacock.color": "#0afc81"
+  "peacock.color": "#0afc81",
+  "sqltools.connections": [
+    {
+      "ssh": "Disabled",
+      "previewLimit": 50,
+      "server": "localhost",
+      "driver": "PostgreSQL",
+      "name": "shukaku",
+      "connectString": "postgresql://postgres:xzmn0nqa1edi2ija@72.62.27.125:5437/postgres"
+    }
+  ]
 }
