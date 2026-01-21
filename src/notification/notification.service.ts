@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 // Browser Notification API এর সাথে কনফ্লিক্ট এড়াতে টাইপ এলিয়াস ব্যবহার
@@ -12,7 +12,7 @@ export class NotificationService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateNotificationDto): Promise<PrismaNotification | null> {
-    // No notification for own post
+    // No notification for own post/action
     if (dto.userId === dto.triggerUserId) return null;
 
     return await this.prisma.notification.create({
@@ -44,7 +44,7 @@ export class NotificationService {
 
   async markAsRead(id: string, userId: string): Promise<PrismaNotification> {
     return await this.prisma.notification.update({
-      where: { id, userId },
+      where: { id, userId }, // ← security: only owner can mark
       data: { isRead: true },
     });
   }
@@ -55,4 +55,54 @@ export class NotificationService {
       data: { isRead: true },
     });
   }
+
+  //              NEW METHODS - DELETION
+
+  //delete single notification
+  async deleteOne(id: string, userId: string): Promise<PrismaNotification> {
+    // check if it exists + belongs to user first
+    const notification = await this.prisma.notification.findUnique({
+      where: { id },
+    });
+
+    if (!notification) {
+      throw new NotFoundException('Notification not found');
+    }
+
+    if (notification.userId !== userId) {
+      throw new NotFoundException(
+        'You do not have permission to delete this notification',
+      );
+      // or throw new ForbiddenException() depending on your preference
+    }
+
+    return await this.prisma.notification.delete({
+      where: { id },
+    });
+  }
+
+  // Delete ALL notifications for the given user
+
+  async deleteAll(userId: string): Promise<Prisma.BatchPayload> {
+    return await this.prisma.notification.deleteMany({
+      where: { userId },
+    });
+  }
+
+  /**
+   * Delete only read notifications
+   */
+  // async deleteAllRead(userId: string): Promise<Prisma.BatchPayload> {
+  //   return await this.prisma.notification.deleteMany({
+  //     where: { userId, isRead: true },
+  //   });
+  // }
+
+  // Delete only unread notifications
+
+  // async deleteAllUnread(userId: string): Promise<Prisma.BatchPayload> {
+  //   return await this.prisma.notification.deleteMany({
+  //     where: { userId, isRead: false },
+  //   });
+  // }
 }
