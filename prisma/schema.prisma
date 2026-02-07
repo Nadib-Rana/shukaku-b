@@ -150,7 +150,7 @@ model Purchase {
   subscription   Subscription @relation(fields: [subscriptionId], references: [id])
   
   platform       String       // "ios" | "android" - needed for receipt validation
-  transactionId  String       @map("transaction_id")
+  transactionId  String  @unique @map("transaction_id")
   purchaseDate   DateTime     @map("purchase_date")
   expiryDate     DateTime?    @map("expiry_date")
   status         String       
