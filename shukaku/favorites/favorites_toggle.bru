@@ -1,0 +1,26 @@
+meta {
+  name: favorites_toggle
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/favorites/toggle
+  body: json
+  auth: inherit
+}
+
+headers {
+  user-id: 412a2feb-136b-4890-8f54-0108958630e9
+}
+
+body:json {
+  {
+  "postId":"0abc75b6-b86b-45d7-8c22-03c64328ef7b"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

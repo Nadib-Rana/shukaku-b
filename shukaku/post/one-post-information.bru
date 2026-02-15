@@ -1,0 +1,24 @@
+meta {
+  name: one-post-information
+  type: http
+  seq: 5
+}
+
+get {
+  url: http://localhost:3000/posts/90df54f3-ba96-4296-99e8-563699e0c3fb
+  body: none
+  auth: inherit
+}
+
+headers {
+  user-id: 4ab8cad5-93a2-4b2c-bd19-123a8d876063
+}
+
+vars:pre-request {
+  post_id: bbfcdf46-f2d3-4026-85bb-0afe99b9cc17
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,30 @@
+meta {
+  name: Create-purchases
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/purchases
+  body: json
+  auth: inherit
+}
+
+headers {
+  user-id: 4ab8cad5-93a2-4b2c-bd19-123a8d876063
+}
+
+body:json {
+  {
+    "subscriptionId": "91166b2e-c19f-4be7-91bd-cbd8965b6452", 
+    "platform": "android",
+    "transactionId": "GPA.3312-4456-7789-00123",
+    "status": "active",
+    "expiryDate": "2026-02-05T10:00:00Z"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

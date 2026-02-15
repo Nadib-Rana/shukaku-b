@@ -1,0 +1,29 @@
+meta {
+  name: create-post-text
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/posts
+  body: json
+  auth: inherit
+}
+
+headers {
+  user-id: 4ab8cad5-93a2-4b2c-bd19-123a8d876063
+}
+
+body:json {
+  {
+    "categoryId": "f39e1b8a-5837-465f-8264-d2beeb0b981b",
+    "contentType": "TEXT",
+    "textContent": "0000000000",
+    "postType":"URGENT"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
