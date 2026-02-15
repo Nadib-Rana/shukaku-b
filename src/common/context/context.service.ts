@@ -16,11 +16,10 @@ export class ContextService {
   private getStore(): RequestContextStore {
     const store = requestContext.getStore();
     if (!store) {
-      // This should not happen if the middleware is set up correctly
       this.logger.warn(
         'AsyncLocalStorage store not found. Middleware may be missing.',
       );
-      // Return a dummy map to prevent crashes, though this indicates an issue.
+
       return new Map();
     }
     return store;

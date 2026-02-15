@@ -25,10 +25,9 @@ import { RESPONSE_MESSAGE_KEY } from '../decorators/response-message.decorator';
 export class ResponseStandardizationInterceptor<T>
   implements NestInterceptor<T, ApiResponseDto<T | T[]>>
 {
-  // --- Inject ContextService and Reflector ---
   constructor(
     private readonly contextService: ContextService,
-    private readonly reflector: Reflector, // <-- Inject Reflector
+    private readonly reflector: Reflector,
   ) {}
 
   intercept(
@@ -37,16 +36,16 @@ export class ResponseStandardizationInterceptor<T>
   ): Observable<ApiResponseDto<T | T[]>> {
     const ctx: HttpArgumentsHost = context.switchToHttp();
     const request: Request = ctx.getRequest();
-    const response: Response = ctx.getResponse(); // <-- GET RESPONSE OBJECT
+    const response: Response = ctx.getResponse();
     const path: string = request.url;
-    const handler = context.getHandler(); // Get the route handler
+    const handler = context.getHandler();
 
     const requestId = this.contextService.getRequestId() || null;
 
     // --- Get custom message from decorator ---
     const customMessage = this.reflector.get<string>(
       RESPONSE_MESSAGE_KEY,
-      handler, // Check the handler for the metadata
+      handler,
     );
 
     return next.handle().pipe(
@@ -57,8 +56,7 @@ export class ResponseStandardizationInterceptor<T>
         if (data instanceof PaginatedResponseDto) {
           return new ApiResponseDto<T[]>(
             true,
-            statusCode, // <-- PASS STATUS CODE
-            // Use custom message or default
+            statusCode,
             customMessage || 'Data fetched successfully (paginated)',
             path,
             requestId,
@@ -70,8 +68,7 @@ export class ResponseStandardizationInterceptor<T>
         // Handle non-paginated, standard successful responses
         return new ApiResponseDto<T>(
           true,
-          statusCode, // <-- PASS STATUS CODE
-          // Use custom message or default
+          statusCode,
           customMessage || 'Operation successful',
           path,
           requestId,

@@ -6,7 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ContextModule } from './common/context/context.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
-import { APP_INTERCEPTOR, Reflector } from '@nestjs/core'; // <-- Import Reflector
+import { APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { ResponseStandardizationInterceptor } from './common/interceptors/response-standardization.interceptor';
 import { UserModule } from './user/user.module';
 import { PrismaModule } from './prisma.module';
@@ -49,6 +49,6 @@ import { NotificationModule } from './notification/notification.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestIdMiddleware).forRoutes('*');
+    consumer.apply(RequestIdMiddleware, RequestLoggerMiddleware).forRoutes('*');
   }
 }
