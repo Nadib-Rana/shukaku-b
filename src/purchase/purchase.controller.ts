@@ -31,7 +31,7 @@ export class PurchaseController {
   @ResponseMessage('Own history of the  purchase')
   async getHistory(@Headers('user-id') userId: string): Promise<Purchase[]> {
     if (!userId) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('User ID required in headers');
     }
     return this.purchaseService.findUserPurchases(userId);
   }
