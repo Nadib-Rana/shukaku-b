@@ -4,8 +4,13 @@ generator client {
   moduleFormat    = "cjs"
 }
 
-datasource db {
-  provider = "postgresql"
+
+
+model User {
+  id    Int     @default(autoincrement()) @id
+  email String  @unique
+  name  String?
+  posts Post[]
 }
 
 
