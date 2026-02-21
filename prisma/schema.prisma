@@ -27,6 +27,13 @@ enum NotificationType {
   NEW_FAVORITE
 }
 
+
+enum type{
+  DAILY 
+  STREAK
+  ONE_TIME
+}
+
 model User {
   id             String        @id @default(uuid()) @db.Uuid
   anonymousId    String        @unique @map("anonymous_id") // The device hash
@@ -34,7 +41,9 @@ model User {
   subscriptionId String?       @db.Uuid @map("subscription_id")
   subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
 
-
+  level         Int      @default(1)
+  currentXp     Int      @default(0) @map("current_xp")
+ 
   posts          Post[]
   responses      Response[]
   pushTokens     PushToken[]
@@ -48,6 +57,13 @@ model User {
 
   createdAt      DateTime      @default(now()) @map("created_at")
   lastActiveAt   DateTime?     @map("last_active_at")
+
+
+  missionProgress UserMissionProgress[]
+  streak          UserStreak?
+  inventory       UserInventory[]
+
+
 
   @@map("users")
 }
@@ -125,7 +141,6 @@ model Subscription {
   name              String   
   postExpiryHours   Int      @map("post_expiry_hours")
   themeColor        String?  @map("theme_color")
-  // canHideResponse   Boolean  @default(false) @map("can_hide_response")
   price             Decimal  @db.Decimal(10, 2)
   
   users             User[]
@@ -210,4 +225,60 @@ model Notification {
   @@index([userId, createdAt(Sort.Desc)])
   @@index([userId, isRead, createdAt(Sort.Desc)])
   @@map("notifications")
+}
+
+
+model Mission {
+  id               String   @id @default(uuid()) @db.Uuid
+  title            String
+  slug             String?   @unique 
+  xpReward         Int      @default(0) @map("xp_reward")
+  requirementCount Int      @default(1) @map("requirement_count")
+  type             String   @default("DAILY") // DAILY, STREAK, SMART
+  
+  userProgress     UserMissionProgress[]
+
+  @@map("missions")
+}
+
+
+model UserMissionProgress {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  missionId    String   @db.Uuid @map("mission_id")
+  mission      Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  
+  currentCount Int      @default(0) @map("current_count")
+  isCompleted  Boolean  @default(false) @map("is_completed")
+  lastUpdatedAt DateTime @default(now()) @updatedAt @map("last_updated_at")
+
+  @@unique([userId, missionId])
+  @@map("user_mission_progress")
+}
+
+
+model UserStreak {
+  userId          String   @id @db.Uuid @map("user_id")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  currentStreak   Int      @default(0) @map("current_streak")
+  longestStreak   Int      @default(0) @map("longest_streak")
+  lastLoginDate   DateTime @default(now()) @map("last_login_date")
+
+  @@map("user_streaks")
+}
+
+model UserInventory {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  itemType  String   // "GOLD_BUBBLE_CREDIT", "URGENT_BUBBLE_CREDIT", "EXTENSION_48H"
+  quantity  Int      @default(0)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([userId, itemType])
+  @@map("user_inventory")
 }
