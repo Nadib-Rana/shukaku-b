@@ -41,7 +41,7 @@ export class PostController {
   }
 
   @Get('category/:categoryId')
-  @ResponseMessage('Posts filtered by category successfully') // "Filer" -> "Filtered"
+  @ResponseMessage('Posts filtered by category successfully')
   async getByCategory(
     @Param('categoryId', new ParseUUIDPipe()) categoryId: string,
   ) {
@@ -65,7 +65,7 @@ export class PostController {
   }
 
   @Delete(':id')
-  @ResponseMessage('Post deleted successfully') // "succesfully" -> "successfully"
+  @ResponseMessage('Post deleted successfully')
   async remove(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Headers('user-id') userId: string,
