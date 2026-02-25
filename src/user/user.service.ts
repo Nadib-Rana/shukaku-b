@@ -28,7 +28,7 @@ export class UserService {
   }
 
   // ===============================
-  // 🔐 Double Transposition Cipher
+  //  Double Transposition Cipher
   // ===============================
 
   private doubleTranspositionEncrypt(

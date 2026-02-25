@@ -241,7 +241,6 @@ model Mission {
   @@map("missions")
 }
 
-
 model UserMissionProgress {
   id           String   @id @default(uuid()) @db.Uuid
   userId       String   @db.Uuid @map("user_id")
@@ -257,7 +256,6 @@ model UserMissionProgress {
   @@unique([userId, missionId])
   @@map("user_mission_progress")
 }
-
 
 model UserStreak {
   userId          String   @id @db.Uuid @map("user_id")

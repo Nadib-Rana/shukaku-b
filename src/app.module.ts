@@ -20,6 +20,9 @@ import { FavoriteModule } from './favorite/favorite.module';
 import { MinioModule } from './minio/minio.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { NotificationModule } from './notification/notification.module';
+import { MissionModule } from './mission/mission.module';
+import { StreakModule } from './streak/streak.module';
+import { InventoryModule } from './inventory/inventory.module';
 
 @Module({
   imports: [
@@ -36,6 +39,9 @@ import { NotificationModule } from './notification/notification.module';
     FavoriteModule,
     MinioModule,
     NotificationModule,
+    MissionModule,
+    StreakModule,
+    InventoryModule,
   ],
   controllers: [AppController],
   providers: [
