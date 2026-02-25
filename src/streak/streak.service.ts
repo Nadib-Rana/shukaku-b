@@ -1,12 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { MissionService } from '../mission/mission.service';
+import { PushTokenService } from '../push-token/push-token.service';
 
 @Injectable()
 export class StreakService {
   constructor(
     private prisma: PrismaService,
     private missionService: MissionService,
+    @Inject(forwardRef(() => PushTokenService))
+    private pushTokenService: PushTokenService,
   ) {}
 
   /**

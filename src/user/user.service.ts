@@ -1,9 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { StreakService } from '../streak/streak.service';
+import { PushTokenService } from '../push-token/push-token.service';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => StreakService))
+    private streakService: StreakService,
+    @Inject(forwardRef(() => PushTokenService))
+    private pushTokenService: PushTokenService,
+  ) {}
 
   async auth(anonymousId: string) {
     // 🔹 anonymousId এখানে আসলে plain device ID
@@ -13,11 +21,20 @@ export class UserService {
       'KEYTWO',
     );
 
-    return this.prisma.user.upsert({
+    const user = await this.prisma.user.upsert({
       where: { anonymousId: encryptedAnonymousId },
       update: { lastActiveAt: new Date() },
       create: { anonymousId: encryptedAnonymousId },
     });
+
+    // 🎯 Workflow 1: Engagement (App Open) - Daily Login Mission + Streak
+    try {
+      await this.streakService.handleDailyLogin(user.id);
+    } catch (error) {
+      console.error('Error handling daily login:', error);
+    }
+
+    return user;
   }
 
   async findOne(id: string) {

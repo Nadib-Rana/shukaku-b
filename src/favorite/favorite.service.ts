@@ -1,14 +1,22 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateFavoriteDto } from './dto/create-favorite.dto';
 import { Favorite } from '../generated/prisma/client';
 import { NotificationService } from '../notification/notification.service';
+import { MissionService } from '../mission/mission.service';
 
 @Injectable()
 export class FavoriteService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationService: NotificationService,
+    @Inject(forwardRef(() => MissionService))
+    private readonly missionService: MissionService,
   ) {}
 
   async toggleFavorite(
@@ -55,6 +63,13 @@ export class FavoriteService {
       postId: post.id,
       favoriteId: newFavorite.id,
     });
+
+    // 🎯 Workflow 3: Activity (Community Support) - Track for mission (3 favorites = +15 XP)
+    try {
+      await this.missionService.trackProgress(userId, 'add_3_favorites');
+    } catch (error) {
+      console.error('Error tracking favorite mission:', error);
+    }
 
     return { favorited: true, message: 'Added to favorites' };
   }

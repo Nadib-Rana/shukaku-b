@@ -1,9 +1,19 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { PushTokenService } from '../push-token/push-token.service';
 
 @Injectable()
 export class InventoryService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => PushTokenService))
+    private pushTokenService: PushTokenService,
+  ) {}
 
   /**
    * XP খরচ করে প্রিমিয়াম ক্রেডিট কেনা (Workflow 6)
@@ -20,17 +30,26 @@ export class InventoryService {
       }
 
       // ২. ইউজারের XP কমানো
+      const newXp = user.currentXp - COST_IN_XP;
+      const oldLevel = user.level;
+      const newLevel = this.calculateLevel(newXp);
+
       await tx.user.update({
         where: { id: userId },
-        data: { currentXp: { decrement: COST_IN_XP } },
+        data: {
+          currentXp: newXp,
+          level: newLevel,
+        },
       });
 
-      // ৩. ইনভেন্টরিতে ক্রেডিট যোগ করা
-      return await tx.userInventory.upsert({
+      // ३. ইনভেন্টরিতে ক্রেডিট যোগ করা
+      const result = await tx.userInventory.upsert({
         where: { userId_itemType: { userId, itemType } },
         update: { quantity: { increment: 1 } },
         create: { userId, itemType, quantity: 1 },
       });
+
+      return { result, newLevel, oldLevel };
     });
   }
 
@@ -46,10 +65,22 @@ export class InventoryService {
       throw new BadRequestException('You do not have enough credits.');
     }
 
-    return await this.prisma.userInventory.update({
+    const result = await this.prisma.userInventory.update({
       where: { id: inventory.id },
       data: { quantity: { decrement: 1 } },
     });
+
+    // 🔔 Send notification for item consumption
+    try {
+      await this.pushTokenService.sendInstantNotification(
+        userId,
+        `Used 1x ${itemType}. Remaining: ${result.quantity}`,
+      );
+    } catch (error) {
+      console.error('Error sending item consumption notification:', error);
+    }
+
+    return result;
   }
 
   // ইউজারের বর্তমান সব ক্রেডিট দেখা
@@ -57,5 +88,10 @@ export class InventoryService {
     return this.prisma.userInventory.findMany({
       where: { userId },
     });
+  }
+
+  private calculateLevel(totalXp: number): number {
+    // Simple level calculation: 100 XP per level
+    return Math.floor(totalXp / 100) + 1;
   }
 }

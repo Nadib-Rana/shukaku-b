@@ -2,10 +2,13 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateResponseDto } from './dto/create-response.dto';
 import { NotificationService } from '../notification/notification.service';
+import { MissionService } from '../mission/mission.service';
 import { Response } from '../generated/prisma/client';
 
 @Injectable()
@@ -13,6 +16,8 @@ export class ResponseService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationService: NotificationService,
+    @Inject(forwardRef(() => MissionService))
+    private readonly missionService: MissionService,
   ) {}
 
   async create(userId: string, dto: CreateResponseDto): Promise<Response> {
@@ -64,6 +69,13 @@ export class ResponseService {
         postId: post.id,
         responseId: response.id,
       });
+    }
+
+    // 🎯 Workflow 3: Activity (Community Support) - Track for mission (3 responses = +15 XP)
+    try {
+      await this.missionService.trackProgress(userId, 'add_3_responses');
+    } catch (error) {
+      console.error('Error tracking response mission:', error);
     }
 
     return response;

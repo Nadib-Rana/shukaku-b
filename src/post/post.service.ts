@@ -3,10 +3,13 @@ import {
   NotFoundException,
   ForbiddenException,
   Logger,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma.service';
 import { MinioService } from '../minio/minio.service';
+import { MissionService } from '../mission/mission.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { ContentType } from '../generated/prisma/client';
 
@@ -17,6 +20,8 @@ export class PostService {
   constructor(
     private prisma: PrismaService,
     private minioService: MinioService,
+    @Inject(forwardRef(() => MissionService))
+    private missionService: MissionService,
   ) {}
 
   // Cron Job run par 1min
@@ -97,7 +102,7 @@ export class PostService {
     expirationDate.setHours(expirationDate.getHours() + expiryHours);
 
     // ৭. Data save into the database
-    return this.prisma.post.create({
+    const createdPost = await this.prisma.post.create({
       data: {
         userId: user.id,
         categoryId: dto.categoryId,
@@ -109,6 +114,15 @@ export class PostService {
         expiresAt: expirationDate,
       },
     });
+
+    // 🎯 Workflow 2: Activity (Content Creation) - Track for mission (3 posts = +30 XP)
+    try {
+      await this.missionService.trackProgress(userId, 'create_3_posts');
+    } catch (error) {
+      console.error('Error tracking post creation mission:', error);
+    }
+
+    return createdPost;
   }
 
   async getPublicFeed() {
